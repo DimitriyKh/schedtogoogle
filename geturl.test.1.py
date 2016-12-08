@@ -17,23 +17,11 @@ Config = configparser.ConfigParser()
 
 Config.read(configfile)
 
-#.conf MUST be as follows
-#[URLs to parse] 
-#url=
-#url2=
-#[login info]
-#user=
-#password=
-#[Google credentials]
-#google_account=
-#google_password=
-
+#ленивый парсинг конфига
 url=Config['URLs to parse']['url']  
 url2=Config['URLs to parse']['url2']  
 user=Config['login info']['user']
 password=Config['login info']['password'] 
-google_account=Config['Google credentials']['google_account']
-google_password=Config['Google credentials']['google_password']
 
 
 lead_shift_duration="12:15"
@@ -97,7 +85,7 @@ class HTMLTableParser(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         """ We need to remember the opening point for the content of interest.
-        The other tags (<table>, <tr>) are only handled at the closing point.
+     	   The other tags (<table>, <tr>) are only handled at the closing point.
         """
         if tag == 'td':
             self._in_td = True
@@ -139,7 +127,7 @@ class HTMLTableParser(HTMLParser):
  
 # -----------------------------------------------------------------------------
 
-# создаём объект и помощью крутого класса и парсим всё в удобной табличку (2D list)
+# создаём объект и помощью крутого класса и парсим всё в удобную табличку (2D list)
 p = HTMLTableParser()
 p.feed(html)
 table = p.tables
@@ -172,13 +160,8 @@ for row in table[0]:
 
 print(shifts)
 
-## Я так так и не знаю какой месяц в расписании... забыл :)
-## todo:  в рассписании возможно повторение даты если захватить кусок след месяца, надо обработать. 
-
 
 #here starts google calendar part
-
-
 import httplib2
 import os
 
@@ -197,9 +180,9 @@ except ImportError:
 
 # If modifying these scopes, delete your previously saved credentials
 # at ~/.credentials/calendar-python-quickstart.json
-SCOPES = 'https://www.googleapis.com/auth/calendar.readonly'
-CLIENT_SECRET_FILE = 'client_secret.json'
-APPLICATION_NAME = 'Google Calendar API Python Quickstart'
+SCOPES = 'https://www.googleapis.com/auth/calendar'
+CLIENT_SECRET_FILE = '.client_secret.json'
+APPLICATION_NAME = 'Schedule parser into  Google Calendar events (API Python version)'
 
 
 def get_credentials():
@@ -257,3 +240,33 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+def upd_schedule():
+    """It will get data from shifts variable and put as events on google calendar
+    """
+
+    credentials = get_credentials()
+    http = credentials.authorize(httplib2.Http()
+    service = discovery.build('calendar', 'v3', http=http)
+
+    now = datetime.datetime.utcnow().isoformat() + 'Europe/Kiev'
+
+    ## instantiate new object   
+    ## Creates an event
+    createResults = service.events.insert(calendarId=*, body=*, sendNotifications=None, supportsAttachments=None, maxAttendees=None){
+      "start": { 
+        "timeZone": "Europe/Kiev", 
+        "dateTime": "A String", # RFC3339 formatted, time zone offset is required unless a time zone is explicitly specified in timeZone. example '2008-09-08T22:47:31-07:00'
+      },
+      "end": {
+        "timeZone": "Europe/Kiev",
+        "date_time": "A Sring",
+      },
+    }
+
+
+
+
+
+

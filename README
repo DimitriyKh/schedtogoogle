@@ -1,4 +1,32 @@
-Step 1: Turn on the Google Calendar API
+Step 1: Turn on the Google Calendar API and get API key
 
-ttps://www.youtube.com/watch?v=sGLEcsRg0IM
+This guide will help you:
+https://www.youtube.com/watch?v=sGLEcsRg0IM
 
+Note: use/activate google calendar API
+
+Step 2: Download API key as .json and store it as '.client_secret.json' within 'schedtogoogle' folder.
+
+
+Step 3: Create .conf file as follows:
+cat << EOF >> .conf
+[URLs to parse]
+url=
+url2=
+[login info]
+user=
+password=
+EOF
+ 
+were url & url2 are links to current and next months schedule anf login info your ldap creds.
+
+Step 4: Launch the script manually, you'll get prompt to authenmticate the application to access you calendar. Allow it.
+
+Note: your authorisaition token  being stored as ./.credentials/calendar-python-quickstart.json file, make sure you've secured it as well as your API key. 
+
+
+Step 5: You can use the script any time and any way you want. Put it to cron to get calendar updated continuously.
+
+Step 6: ...
+
+Step 7: PROFIT!!!
