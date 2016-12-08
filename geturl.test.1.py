@@ -10,8 +10,8 @@ import configparser
 
 
 #set config file location
-configfile="./.conf"
-
+#configfile="./.conf"
+configfile="../.conf.hideit"
 
 Config = configparser.ConfigParser()
 
@@ -27,13 +27,6 @@ Config.read(configfile)
 #[Google credentials]
 #google_account=
 #google_password=
-
-#Config['URLs to parse']['url']
-#Config['URLs to parse']['url2']
-#Config['login info']['user']
-#Config['login info']['password']
-#Config['Google credentials']['google_account']
-#Config['Google credentials']['google_password']
 
 url=Config['URLs to parse']['url']  
 url2=Config['URLs to parse']['url2']  
@@ -52,10 +45,6 @@ shifts=[]
 
 user_agent = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64)'
 headers = {'User-Agent': user_agent}
-
-print(url)
-print(type(url))
-
 
 password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
 password_mgr.add_password(None, url, user, password)
@@ -155,7 +144,7 @@ p = HTMLTableParser()
 p.feed(html)
 table = p.tables
 
-# Я использую лябда функцию чтобы пройти по лямбда функции пока она перебирает 2D список. 
+# Я использую лямбда функцию чтобы пройти по лямбда функции пока она перебирает 2D список. 
 #user's column in table
 col = [y for y in [x for x in table][0] if "09:00" in y][0].index(user.upper())
 
@@ -184,3 +173,87 @@ for row in table[0]:
 print(shifts)
 
 ## Я так так и не знаю какой месяц в расписании... забыл :)
+## todo:  в рассписании возможно повторение даты если захватить кусок след месяца, надо обработать. 
+
+
+#here starts google calendar part
+
+
+import httplib2
+import os
+
+from apiclient import discovery
+from oauth2client import client
+from oauth2client import tools
+from oauth2client.file import Storage
+
+import datetime
+
+try:
+    import argparse
+    flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
+except ImportError:
+    flags = None
+
+# If modifying these scopes, delete your previously saved credentials
+# at ~/.credentials/calendar-python-quickstart.json
+SCOPES = 'https://www.googleapis.com/auth/calendar.readonly'
+CLIENT_SECRET_FILE = 'client_secret.json'
+APPLICATION_NAME = 'Google Calendar API Python Quickstart'
+
+
+def get_credentials():
+    """Gets valid user credentials from storage.
+
+    If nothing has been stored, or if the stored credentials are invalid,
+    the OAuth2 flow is completed to obtain the new credentials.
+
+    Returns:
+        Credentials, the obtained credential.
+    """
+    home_dir = os.path.expanduser('~')
+    credential_dir = os.path.join(home_dir, '.credentials')
+    if not os.path.exists(credential_dir):
+        os.makedirs(credential_dir)
+    credential_path = os.path.join(credential_dir,
+                                   'calendar-python-quickstart.json')
+
+    store = Storage(credential_path)
+    credentials = store.get()
+    if not credentials or credentials.invalid:
+        flow = client.flow_from_clientsecrets(CLIENT_SECRET_FILE, SCOPES)
+        flow.user_agent = APPLICATION_NAME
+        if flags:
+            credentials = tools.run_flow(flow, store, flags)
+        else: # Needed only for compatibility with Python 2.6
+            credentials = tools.run(flow, store)
+        print('Storing credentials to ' + credential_path)
+    return credentials
+
+## from quickstart guide 
+def main():
+    """Shows basic usage of the Google Calendar API.
+
+    Creates a Google Calendar API service object and outputs a list of the next
+    10 events on the user's calendar.
+    """
+    credentials = get_credentials()
+    http = credentials.authorize(httplib2.Http())
+    service = discovery.build('calendar', 'v3', http=http)
+
+    now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
+    print('Getting the upcoming 10 events')
+    eventsResult = service.events().list(
+        calendarId='primary', timeMin=now, maxResults=10, singleEvents=True,
+        orderBy='startTime').execute()
+    events = eventsResult.get('items', [])
+
+    if not events:
+        print('No upcoming events found.')
+    for event in events:
+        start = event['start'].get('dateTime', event['start'].get('date'))
+        print(start, event['summary'])
+
+
+if __name__ == '__main__':
+    main()
