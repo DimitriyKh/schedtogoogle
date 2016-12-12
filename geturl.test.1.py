@@ -23,6 +23,8 @@ url2=Config['URLs to parse']['url2']
 user=Config['login info']['user']
 password=Config['login info']['password'] 
 
+calendarID=Config['Google side']['calendarID']
+
 
 lead_shift_duration="12:15"
 notlead_shift_duration="12:00"
@@ -30,6 +32,8 @@ day_shift_start="08:45"
 night_shift_start="20:45"
 
 shifts=[]
+
+## переменные выше этой черты, а всё ниже - константами будет
 
 user_agent = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64)'
 headers = {'User-Agent': user_agent}
@@ -161,6 +165,10 @@ for row in table[0]:
 print(shifts)
 
 
+
+print("------------")
+
+
 #here starts google calendar part
 import httplib2
 import os
@@ -238,35 +246,65 @@ def main():
         print(start, event['summary'])
 
 
-if __name__ == '__main__':
-    main()
+#if __name__ == '__main__':
+#    main()
+#
+#print("------------")
 
 
-def upd_schedule():
-    """It will get data from shifts variable and put as events on google calendar
+def updshcedule():
+    """Shows basic usage of the Google Calendar API.
+
+    Creates a Google Calendar API service object and outputs a list of the next
+    10 events on the user's calendar.
     """
-
     credentials = get_credentials()
-    http = credentials.authorize(httplib2.Http()
+    http = credentials.authorize(httplib2.Http())
     service = discovery.build('calendar', 'v3', http=http)
 
-    now = datetime.datetime.utcnow().isoformat() + 'Europe/Kiev'
+    now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
 
-    ## instantiate new object   
-    ## Creates an event
-    createResults = service.events.insert(calendarId=*, body=*, sendNotifications=None, supportsAttachments=None, maxAttendees=None){
-      "start": { 
-        "timeZone": "Europe/Kiev", 
-        "dateTime": "A String", # RFC3339 formatted, time zone offset is required unless a time zone is explicitly specified in timeZone. example '2008-09-08T22:47:31-07:00'
+    ## format an event
+    event = {
+      'summary':'Next Shift',
+      'description':'this a shift',
+      "start": {
+        "timeZone": "Europe/Kiev",
+        "dateTime": "2016-12-12T08:45:00+02:00", # RFC3339 formatted, time zone offset is required unless a time zone is explicitly specified in timeZone. example '2008-09-08T22:47:31-07:00'
       },
       "end": {
         "timeZone": "Europe/Kiev",
-        "date_time": "A Sring",
+        "dateTime": "2016-12-12T21:00:00+02:00",
+      },
+      'reminders':{
+        'useDefault':False,
+        'overrides': [
+          {'method': 'email', 'minutes': 2*60},
+          {'method': 'popup', 'minutes': 35},
+        ],
       },
     }
 
+    ## submit the event
+    eventResult = service.events().insert(calendarId=calendarID, body=event).execute()
+
+    #получить список календарей
+    #page_token = None
+    #while True:
+    #  calendar_list = service.calendarList().list(pageToken=page_token).execute()
+    #  for calendar_list_entry in calendar_list['items']:
+    #    print(calendar_list_entry)
+    #    #print(calendar_list_entry['summary'])
+    #  page_token = calendar_list.get('nextPageToken')
+    #  if not page_token:
+    #    break
+    #
 
 
+    #calendar_list_entry = service.calendarList().get(calendarId='Work').execute()
 
+    #print(calendar_list_entry['summary'])
 
+    print(eventResult)
 
+updshcedule()

@@ -10,3 +10,4 @@
 4.2 в .conf добавить имя календаря
 4.3 в .conf добавить путь к google api token файлу (defautl ~/.credentials/.client_secret.json)
 5. можно подумать над from rfc3339 import rfc3339 чтобы dateTime вставлять через rfc3339(timestamp)
+6. Получать 'calendarId' по удобочитаемому 'summary' #googlehasperfectdoc
