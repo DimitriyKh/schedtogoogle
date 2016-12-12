@@ -136,6 +136,8 @@ p = HTMLTableParser()
 p.feed(html)
 table = p.tables
 
+print(table)
+
 # Я использую лямбда функцию чтобы пройти по лямбда функции пока она перебирает 2D список. 
 #user's column in table
 col = [y for y in [x for x in table][0] if "09:00" in y][0].index(user.upper())
@@ -149,6 +151,20 @@ day = re.compile('(?:0?[7-9]|1[0-9]):[0-5][0-9]')
 night = re.compile('2[0-3]:[0-5][0-9]')
 
 #А вот тут я уже устал хитрить с lambda и написал всё "в лоб"
+#for row in table[0]:
+# if user.upper() in row:
+#  if  day.match(row[col]):
+#    if user.upper() in row[leads[0]]:
+#      shifts.append([row[0],'day','lead'])
+#    else:
+#      shifts.append([row[0],'day','notlead'])
+#  elif night.match(row[col]):
+#    if user.upper() in row[leads[1]]:
+#      shifts.append([row[0],'night','lead']) 
+#    else:
+#      shifts.append([row[0],'night','notlead'])
+#print(shifts)
+
 for row in table[0]:
  if user.upper() in row:
   if  day.match(row[col]):
@@ -162,8 +178,11 @@ for row in table[0]:
     else:
       shifts.append([row[0],'night','notlead'])
 
-print(shifts)
-
+#overkill но просто было интересно 
+month,year = str(table[0][1][8]).split()
+import calendar
+month=dict((v,k) for k,v in enumerate(calendar.month_name))[month]
+#print("month is:",month,", year is:",year)
 
 
 print("------------")
@@ -307,4 +326,4 @@ def updshcedule():
 
     print(eventResult)
 
-updshcedule()
+#updshcedule()
