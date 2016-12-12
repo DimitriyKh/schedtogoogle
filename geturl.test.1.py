@@ -186,7 +186,7 @@ for row in table[0]:
           shifts.append([year+"-"+month+"-"+row[0]+"T"+night_lead_shift_start, year+"-"+month+"-"+str(int(row[0])+1)+"T"+day_shift_start])
           lastday=row[0]
         else:
-          shifts.append([year+"-"+month+"-"+row[0]+"T"+day_lead_shift_start, year+"-"+month+"-"+str(int(row[0])+1)+"T"+day_shift_start])
+          shifts.append([year+"-"+month+"-"+row[0]+"T"+night_shift_start, year+"-"+month+"-"+str(int(row[0])+1)+"T"+day_shift_start])
           lastday=row[0]
 
 print(shifts)
