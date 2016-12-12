@@ -25,12 +25,14 @@ password=Config['login info']['password']
 
 calendarID=Config['Google side']['calendarID']
 
+timeZone="Europe/Kiev"
 
-lead_shift_duration="12:15"
-notlead_shift_duration="12:00"
-day_shift_start="08:45"
-night_shift_start="20:45"
-
+#lead_shift_duration="12:15:00"
+#notlead_shift_duration="12:00:00"
+day_lead_shift_start="08:45:00"
+night_lead_shift_start="20:45:00"
+day_shift_start="09:00:00"
+night_shift_start="21:00:00"
 shifts=[]
 
 ## переменные выше этой черты, а всё ниже - константами будет
@@ -145,45 +147,49 @@ col = [y for y in [x for x in table][0] if "09:00" in y][0].index(user.upper())
 #повортим для закрепления
 #get column No for shiftead
 s = [s for s in [x for x in table][0] if "Day" in s][0]
-leads = [i for i,x in enumerate(s) if x == "12.25"]
+leads = [i for i,x in enumerate(s) if x == "12.25" or x == "12,25" ]
 
 day = re.compile('(?:0?[7-9]|1[0-9]):[0-5][0-9]')
 night = re.compile('2[0-3]:[0-5][0-9]')
 
-#А вот тут я уже устал хитрить с lambda и написал всё "в лоб"
-#for row in table[0]:
-# if user.upper() in row:
-#  if  day.match(row[col]):
-#    if user.upper() in row[leads[0]]:
-#      shifts.append([row[0],'day','lead'])
-#    else:
-#      shifts.append([row[0],'day','notlead'])
-#  elif night.match(row[col]):
-#    if user.upper() in row[leads[1]]:
-#      shifts.append([row[0],'night','lead']) 
-#    else:
-#      shifts.append([row[0],'night','notlead'])
-#print(shifts)
-
-for row in table[0]:
- if user.upper() in row:
-  if  day.match(row[col]):
-    if user.upper() in row[leads[0]]:
-      shifts.append([row[0],'day','lead'])
-    else:
-      shifts.append([row[0],'day','notlead'])
-  elif night.match(row[col]):
-    if user.upper() in row[leads[1]]:
-      shifts.append([row[0],'night','lead']) 
-    else:
-      shifts.append([row[0],'night','notlead'])
-
 #overkill но просто было интересно 
 month,year = str(table[0][1][8]).split()
+
+#это какой-то треш, каждый раз в расписании новые сюрпризы
+#print(month)
+#if month.encode('UTF-8') is "Декабрь": 
+month = 'December'
+#rint(month)
+
+
 import calendar
 month=dict((v,k) for k,v in enumerate(calendar.month_name))[month]
 #print("month is:",month,", year is:",year)
+month,year = str(month),str(year)
 
+#Ога, иногда есть день другой на следующий месяц, приходится и это проверять
+lastday='0'
+
+for row in table[0]:
+  if user.upper() in row:
+    if  day.match(row[col]):
+      if int(lastday) < int(row[0]):
+        if user.upper() in row[leads[0]]:
+          shifts.append([year+"-"+month+"-"+row[0]+"T"+str(day_lead_shift_start), year+"-"+month+"-"+str(int(row[0]))+"T"+str(night_shift_start)])
+          lastday=row[0]
+        else:
+          shifts.append([year+"-"+month+"-"+row[0]+"T"+day_shift_start, year+"-"+month+"-"+str(int(row[0]))+"T"+night_shift_start])
+          lastday=row[0]
+    elif night.match(row[col]):
+      if int(lastday) < int(row[0]):
+        if user.upper() in row[leads[0]]:
+          shifts.append([year+"-"+month+"-"+row[0]+"T"+night_lead_shift_start, year+"-"+month+"-"+str(int(row[0])+1)+"T"+day_shift_start])
+          lastday=row[0]
+        else:
+          shifts.append([year+"-"+month+"-"+row[0]+"T"+day_lead_shift_start, year+"-"+month+"-"+str(int(row[0])+1)+"T"+day_shift_start])
+          lastday=row[0]
+
+print(shifts)
 
 print("------------")
 
@@ -271,7 +277,7 @@ def main():
 #print("------------")
 
 
-def updshcedule():
+def updshcedule(start,end):
     """Shows basic usage of the Google Calendar API.
 
     Creates a Google Calendar API service object and outputs a list of the next
@@ -289,11 +295,11 @@ def updshcedule():
       'description':'this a shift',
       "start": {
         "timeZone": "Europe/Kiev",
-        "dateTime": "2016-12-12T08:45:00+02:00", # RFC3339 formatted, time zone offset is required unless a time zone is explicitly specified in timeZone. example '2008-09-08T22:47:31-07:00'
+        "dateTime": start, # RFC3339 formatted, time zone offset is required unless a time zone is explicitly specified in timeZone. example '2008-09-08T22:47:31-07:00'
       },
       "end": {
         "timeZone": "Europe/Kiev",
-        "dateTime": "2016-12-12T21:00:00+02:00",
+        "dateTime": end,
       },
       'reminders':{
         'useDefault':False,
@@ -326,4 +332,5 @@ def updshcedule():
 
     print(eventResult)
 
-#updshcedule()
+for start,end  in shifts:
+  updshcedule(start,end)
