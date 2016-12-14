@@ -183,18 +183,18 @@ for row in table[0]:
     if  day.match(row[col]):
       if int(lastday) < int(row[0]):
         if user.upper() in row[leads[0]]:
-          shifts.append([year+"-"+month+"-"+row[0]+"T"+str(day_lead_shift_start), year+"-"+month+"-"+str(int(row[0]))+"T"+str(night_shift_start)])
+          shifts.append([year+"-"+month+"-"+re.sub("(?<!\d)(\d)(?!\d)", '0\\1', row[0])+"T"+str(day_lead_shift_start), year+"-"+month+"-"+re.sub("(?<!\d)(\d)(?!\d)", '0\\1', row[0])+"T"+str(night_shift_start)])
           lastday=row[0]
         else:
-          shifts.append([year+"-"+month+"-"+row[0]+"T"+day_shift_start, year+"-"+month+"-"+str(int(row[0]))+"T"+night_shift_start])
+          shifts.append([year+"-"+month+"-"+re.sub("(?<!\d)(\d)(?!\d)", '0\\1', row[0])+"T"+day_shift_start, year+"-"+month+"-"+re.sub("(?<!\d)(\d)(?!\d)", '0\\1', row[0])+"T"+night_shift_start])
           lastday=row[0]
     elif night.match(row[col]):
       if int(lastday) < int(row[0]):
         if user.upper() in row[leads[1]]:
-          shifts.append([year+"-"+month+"-"+row[0]+"T"+night_lead_shift_start, year+"-"+month+"-"+str(int(row[0])+1)+"T"+day_shift_start])
+          shifts.append([year+"-"+month+"-"+re.sub("(?<!\d)(\d)(?!\d)", '0\\1', row[0])+"T"+night_lead_shift_start, year+"-"+month+"-"+re.sub("(?<!\d)(\d)(?!\d)", '0\\1', str(int(row[0])+1))+"T"+day_shift_start])
           lastday=row[0]
         else:
-          shifts.append([year+"-"+month+"-"+row[0]+"T"+night_shift_start, year+"-"+month+"-"+str(int(row[0])+1)+"T"+day_shift_start])
+          shifts.append([year+"-"+month+"-"+re.sub("(?<!\d)(\d)(?!\d)", '0\\1', row[0])+"T"+night_shift_start, year+"-"+month+"-"+re.sub("(?<!\d)(\d)(?!\d)", '0\\1', str(int(row[0])+1))+"T"+day_shift_start])
           lastday=row[0]
 
 print(shifts)
@@ -259,26 +259,28 @@ def getcurrentcalendar(calendarID):
     Creates a Google Calendar API service object and outputs a list of 
     events for given calendar id
     """
+    currentcalendar=[]
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
     service = discovery.build('calendar', 'v3', http=http)
 
     now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
+    curmonth = '{:%Y-%m-01T00:00:00}Z'.format(datetime.datetime.now())
+    nextmonth = '{:%Y-%m-01T00:00:00}Z'.format(datetime.datetime.now()+datetime.timedelta(365/12))
 
-    calendar_list_entry = service.events().list(calendarId=calendarID).execute()
-    print(calendar_list_entry)
+    eventsResult = service.events().list(
+        calendarId=calendarID, timeMin=curmonth, timeMax=nextmonth, singleEvents=True,
+        orderBy='startTime').execute()
+    events = eventsResult.get('items', [])
 
+    if not events:
+        print('No upcoming events found.')
+    for event in events:
+        start, end = event['start'].get('dateTime')[:-6],  event['end'].get('dateTime')[:-6]
+        #start, end = event['start'].get('dateTime'),  event['end'].get('dateTime')
+        currentcalendar.append([start, end])
 
-#    eventsResult = service.events().list(
-#        calendarId='primary', timeMin=now, maxResults=10, singleEvents=True,
-#        orderBy='startTime').execute()
-#    events = eventsResult.get('items', [])
-#
-#    if not events:
-#        print('No upcoming events found.')
-#    for event in events:
-#        start = event['start'].get('dateTime', event['start'].get('date'))
-#        print(start, event['summary'])
+    print(currentcalendar)
 
 
 getcurrentcalendar(calendarID)
@@ -299,7 +301,7 @@ def updshcedule(start,end):
     ## dateTime is RFC3339 formatted, time zone offset is required unless a time zone is explicitly specified in timeZone. example '2008-09-08T22:47:31-07:00'
     event = {
       'summary':'Next Shift',
-      'description':'this a shift',
+      'description':'this is a shift',
       "start": {
         "timeZone": "Europe/Kiev",
         "dateTime": start,
