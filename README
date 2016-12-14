@@ -1,9 +1,12 @@
-Step 1: Turn on the Google Calendar API and get API key
+Step 1: Turn on the Google Calendar API and get API key here
 
-This guide will help you:
-https://www.youtube.com/watch?v=sGLEcsRg0IM
+        https://console.developers.google.com/flows/enableapi?apiid=calendar&pli=1       
 
-Note: use/activate google calendar API
+  This guide will help you:
+
+        https://www.youtube.com/watch?v=sGLEcsRg0IM
+
+Note: following video use/activate google calendar API instead of Drive's one.
 
 Step 2: Download API key as .json and store it as '.client_secret.json' within 'schedtogoogle' folder.
 
@@ -16,16 +19,20 @@ url2=
 [login info]
 user=
 password=
+[Google side]
+calendarId=
+timeZone=Europe/Kiev
 EOF
  
-were url & url2 are links to current and next months schedule anf login info your ldap creds.
+were: url & url2 are links to current and next months schedule anf login info your ldap creds.
+      calendarId in format {sometext}@group.calendar.google.com also know as calendar address, get it from detailed info on your calendar.
 
 Step 4: Launch the script manually, you'll get prompt to authenmticate the application to access you calendar. Allow it.
 
-Note: your authorisaition token  being stored as ./.credentials/calendar-python-quickstart.json file, make sure you've secured it as well as your API key. 
+Note: your authorisaition token  being stored as ~./.credentials/calendar-python-quickstart.json file, make sure you've secured it as well as your API key. 
 
-
-Step 5: You can use the script any time and any way you want. Put it to cron to get calendar updated continuously.
+#the step is under developement 
+#Step 5: You can use the script any time and any way you want. Put it to cron to get calendar updated continuously.
 
 Step 6: ...
 

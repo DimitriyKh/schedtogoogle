@@ -133,41 +133,49 @@ class HTMLTableParser(HTMLParser):
  
 # -----------------------------------------------------------------------------
 
-# создаём объект и помощью крутого класса и парсим всё в удобную табличку (2D list)
+# создаём объект и c помощью крутого класса и парсим всё в удобную табличку (2D list)
 p = HTMLTableParser()
 p.feed(html)
 table = p.tables
 
 print(table)
 
+print("------------")
+
 # Я использую лямбда функцию чтобы пройти по лямбда функции пока она перебирает 2D список. 
 #user's column in table
 col = [y for y in [x for x in table][0] if "09:00" in y][0].index(user.upper())
 
-#повортим для закрепления
-#get column No for shiftead
+#повторим для закрепления
 s = [s for s in [x for x in table][0] if "Day" in s][0]
+#get column No for shiftead
 leads = [i for i,x in enumerate(s) if x == "12.25" or x == "12,25" ]
+
 
 day = re.compile('(?:0?[7-9]|1[0-9]):[0-5][0-9]')
 night = re.compile('2[0-3]:[0-5][0-9]')
 
-#overkill но просто было интересно 
 month,year = str(table[0][1][8]).split()
 
+Months_En = {'January': 1, 'February': 2, 'March': 3, 'April': 4, 'May': 5, 'June': 6, 'July': 7, 'August': 8, 'September': 9, 'October': 10, 'November': 11, 'December': 12}
 #это какой-то треш, каждый раз в расписании новые сюрпризы
-#print(month)
-#if month.encode('UTF-8') is "Декабрь": 
-month = 'December'
-#rint(month)
+Months_Ru = {'Январь': 1, 'Февраль': 2, 'Март': 3, 'Апрель': 4, 'Май': 5, 'Июнь': 6, 'Июль': 7, 'Август': 8, 'Сентябрь': 9, 'Октябрь': 10, 'Ноябрь': 11, 'Декабрь': 12}
 
+try:
+  month=Months_En[month]
+except:
+  try:
+    month=Months_Ru[month]
+  except:
+    raise
+    
+#А было б всё на англ, сделал бы так. Overkill, но красиво.
+#import calendar
+#month=dict((v,k) for k,v in enumerate(calendar.month_name))[month]
 
-import calendar
-month=dict((v,k) for k,v in enumerate(calendar.month_name))[month]
-#print("month is:",month,", year is:",year)
 month,year = str(month),str(year)
 
-#Ога, иногда есть день другой на следующий месяц, приходится и это проверять
+#Ога, иногда есть день-другой на следующий месяц, приходится и это проверять
 lastday='0'
 
 for row in table[0]:
@@ -182,7 +190,7 @@ for row in table[0]:
           lastday=row[0]
     elif night.match(row[col]):
       if int(lastday) < int(row[0]):
-        if user.upper() in row[leads[0]]:
+        if user.upper() in row[leads[1]]:
           shifts.append([year+"-"+month+"-"+row[0]+"T"+night_lead_shift_start, year+"-"+month+"-"+str(int(row[0])+1)+"T"+day_shift_start])
           lastday=row[0]
         else:
@@ -246,36 +254,34 @@ def get_credentials():
         print('Storing credentials to ' + credential_path)
     return credentials
 
-## from quickstart guide 
-def main():
+def getcurrentcalendar(calendarID):
     """Shows basic usage of the Google Calendar API.
-
-    Creates a Google Calendar API service object and outputs a list of the next
-    10 events on the user's calendar.
+    Creates a Google Calendar API service object and outputs a list of 
+    events for given calendar id
     """
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
     service = discovery.build('calendar', 'v3', http=http)
 
     now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
-    print('Getting the upcoming 10 events')
-    eventsResult = service.events().list(
-        calendarId='primary', timeMin=now, maxResults=10, singleEvents=True,
-        orderBy='startTime').execute()
-    events = eventsResult.get('items', [])
 
-    if not events:
-        print('No upcoming events found.')
-    for event in events:
-        start = event['start'].get('dateTime', event['start'].get('date'))
-        print(start, event['summary'])
+    calendar_list_entry = service.events().list(calendarId=calendarID).execute()
+    print(calendar_list_entry)
 
 
-#if __name__ == '__main__':
-#    main()
+#    eventsResult = service.events().list(
+#        calendarId='primary', timeMin=now, maxResults=10, singleEvents=True,
+#        orderBy='startTime').execute()
+#    events = eventsResult.get('items', [])
 #
-#print("------------")
+#    if not events:
+#        print('No upcoming events found.')
+#    for event in events:
+#        start = event['start'].get('dateTime', event['start'].get('date'))
+#        print(start, event['summary'])
 
+
+getcurrentcalendar(calendarID)
 
 def updshcedule(start,end):
     """Shows basic usage of the Google Calendar API.
@@ -290,12 +296,13 @@ def updshcedule(start,end):
     now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
 
     ## format an event
+    ## dateTime is RFC3339 formatted, time zone offset is required unless a time zone is explicitly specified in timeZone. example '2008-09-08T22:47:31-07:00'
     event = {
       'summary':'Next Shift',
       'description':'this a shift',
       "start": {
         "timeZone": "Europe/Kiev",
-        "dateTime": start, # RFC3339 formatted, time zone offset is required unless a time zone is explicitly specified in timeZone. example '2008-09-08T22:47:31-07:00'
+        "dateTime": start,
       },
       "end": {
         "timeZone": "Europe/Kiev",
@@ -313,24 +320,7 @@ def updshcedule(start,end):
     ## submit the event
     eventResult = service.events().insert(calendarId=calendarID, body=event).execute()
 
-    #получить список календарей
-    #page_token = None
-    #while True:
-    #  calendar_list = service.calendarList().list(pageToken=page_token).execute()
-    #  for calendar_list_entry in calendar_list['items']:
-    #    print(calendar_list_entry)
-    #    #print(calendar_list_entry['summary'])
-    #  page_token = calendar_list.get('nextPageToken')
-    #  if not page_token:
-    #    break
-    #
-
-
-    #calendar_list_entry = service.calendarList().get(calendarId='Work').execute()
-
-    #print(calendar_list_entry['summary'])
-
     print(eventResult)
 
-for start,end  in shifts:
-  updshcedule(start,end)
+#for start,end  in shifts:
+#  updshcedule(start,end)
