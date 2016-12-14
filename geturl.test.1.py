@@ -197,6 +197,8 @@ for row in table[0]:
           shifts.append([year+"-"+month+"-"+re.sub("(?<!\d)(\d)(?!\d)", '0\\1', row[0])+"T"+night_shift_start, year+"-"+month+"-"+re.sub("(?<!\d)(\d)(?!\d)", '0\\1', str(int(row[0])+1))+"T"+day_shift_start])
           lastday=row[0]
 
+### Это вырвиглазное форматирование я обязательно переделаю..
+
 print(shifts)
 
 print("------------")
@@ -277,13 +279,50 @@ def getcurrentcalendar(calendarID):
         print('No upcoming events found.')
     for event in events:
         start, end = event['start'].get('dateTime')[:-6],  event['end'].get('dateTime')[:-6]
-        #start, end = event['start'].get('dateTime'),  event['end'].get('dateTime')
         currentcalendar.append([start, end])
 
-    print(currentcalendar)
+    #print(currentcalendar)
+#    return currentcalendar
+
+    calendar = service.events().list(calendarId=calendarID).execute()
+
+    print(calendar)
+
+    page_token = None
+    while True:
+      events = service.events().list(calendarId=calendarID, pageToken=page_token).execute()
+      for event in events['items']:
+        print(event['summary'])
+        print(event)
+        print("created: "+event['created']+"  \t updated: "+event['updated'])
+        print("------------")
+      page_token = events.get('nextPageToken')
+      if not page_token:
+        break
 
 
-getcurrentcalendar(calendarID)
+
+currentshifts = getcurrentcalendar(calendarID)
+
+
+
+print(currentshifts)
+
+print("------------")
+
+#first_set = set(map(tuple, shifts))
+#secnd_set = set(map(tuple, getcurrentcalendar(calendarID)))
+#first_set.symmetric_difference(secnd_set)
+
+print("------------")
+
+if shifts == currentshifts:
+  print('OK')
+else:
+  print('noooooo')
+
+
+print("------------")
 
 def updshcedule(start,end):
     """Shows basic usage of the Google Calendar API.
