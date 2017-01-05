@@ -155,7 +155,11 @@ leads = [i for i,x in enumerate(s) if x == "12.25" or x == "12,25" ]
 day = re.compile('(?:0?[7-9]|1[0-9]):[0-5][0-9]')
 night = re.compile('2[0-3]:[0-5][0-9]')
 
-month,year = str(table[0][1][8]).split()
+
+monthyear=[k for k in table[0][1] if k]
+
+m,y = str([k for k in table[0][1] if k]).split()
+month,year = m.strip('][,\''),y.strip('][,\'')
 
 Months_En = {'January': 1, 'February': 2, 'March': 3, 'April': 4, 'May': 5, 'June': 6, 'July': 7, 'August': 8, 'September': 9, 'October': 10, 'November': 11, 'December': 12}
 #это какой-то треш, каждый раз в расписании новые сюрпризы
